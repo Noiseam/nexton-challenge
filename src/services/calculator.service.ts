@@ -96,7 +96,7 @@ export class CalculatorService {
     try {
       const result = eval(expression);
       if (typeof result !== 'number') {
-        throw new BadRequestException('Invalid expression');
+        throw new BadRequestException('you must input numbers only');
       }
       console.log(result)
       return result;
