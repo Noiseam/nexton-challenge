@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CalculatorService {
@@ -13,8 +13,11 @@ export class CalculatorService {
     return CalculatorService.instance;
   }
 
-  calculate(expression: string): number {
+  calculate(expression: string): string {
     // Replace all whitespace characters
+    if (expression.includes('/0')) {
+      throw new BadRequestException('Division by zero');
+    }
     const sanitizedExpression = expression.replace(/\s+/g, '');
     
     // Check for matching pairs of parenthesis
@@ -43,41 +46,62 @@ export class CalculatorService {
 
     // calculate the final expression without parenthesis
     const finalResult = this.calculateWithoutParenthesis(result);
-    return finalResult;
+    return finalResult.toString();
   }
 
   calculateWithoutParenthesis(expression: string): number {
-    const operands = expression.split(/[-+*/]/).map((operand) => {
-      return parseFloat(operand);
+    const operands = expression.split(/[-+]/).map((operand) => {
+      return parseFloat(operand) || 0; // return 0 for invalid operands (e.g. "-")
     });
-
+  
     const operators = expression.split('').filter((char) => {
       return '+-*/'.includes(char);
     });
-
+  
+    // First, evaluate all divisions and multiplications
     let result = operands[0];
     for (let i = 0; i < operators.length; i++) {
       const operator = operators[i];
       const operand = operands[i + 1];
-
-      switch (operator) {
-        case '+':
-          result += operand;
-          break;
-        case '-':
-          result -= operand;
-          break;
-        case '*':
-          result *= operand;
-          break;
-        case '/':
-          result /= operand;
-          break;
-        default:
-          throw new Error(`Unknown operator: ${operator}`);
+  
+      if (operator === '*' || operator === '/') {
+        const prevOperand = operands[i];
+        if (operator === '*') {
+          result = prevOperand * operand;
+        } else if (operator === '/') {
+          if (operand === 0) {
+            throw new BadRequestException('Division by zero');
+          }
+          result = prevOperand / operand;
+        }
+        operands[i + 1] = result;
       }
     }
-
-    return result;
+  
+    // Then, evaluate all additions and subtractions
+    result = operands[0];
+    for (let i = 0; i < operators.length; i++) {
+      const operator = operators[i];
+      const operand = operands[i + 1];
+  
+      if (operator === '+' || operator === '-') {
+        if (operator === '+') {
+          result += operand;
+        } else if (operator === '-') {
+          result -= operand;
+        }
+      }
+    }
+  
+    try {
+      const result = eval(expression);
+      if (typeof result !== 'number') {
+        throw new BadRequestException('Invalid expression');
+      }
+      console.log(result)
+      return result;
+    } catch (e) {
+      throw new BadRequestException('Invalid expression');
+    }
   }
 }

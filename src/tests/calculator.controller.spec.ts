@@ -19,11 +19,11 @@ describe('CalculatorController', () => {
   describe('calculate', () => {
     it('should call the calculate method of the CalculatorService with the provided expression', () => {
       const expression = '1 + 2 * (3 - 4) / 5';
-      const expected = 0.6;
+      const expected = '0.6'; // update expected value to a string
       const calculateSpy = jest.spyOn(service, 'calculate').mockReturnValue(expected);
-
+  
       const result = controller.calculate({ expression });
-
+  
       expect(calculateSpy).toHaveBeenCalledWith(expression);
       expect(result).toBe(expected);
     });
