@@ -45,6 +45,16 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Testing the endpoints
+
+```bash
+# swagger
+$ /api
+
+# post endpoint
+$ /calculator
+```
+
 ## Test
 
 ```bash
